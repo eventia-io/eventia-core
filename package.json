@@ -1,0 +1,85 @@
+{
+    "name": "@eventia/core",
+    "version": "0.0.1",
+    "description": "DDD + CQRS + Event Sourcing building blocks for TypeScript",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "/dist"
+    ],
+    "scripts": {
+        "lint": "eslint --ext .ts \"./source/**\"",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "clean": "rm -rf ./dist/*",
+        "build": "npm run lint && tsc --project .",
+        "prebuild": "npm run clean",
+        "release:patch": "npm version patch && git push --follow-tags",
+        "release:minor": "npm version minor && git push --follow-tags",
+        "release:major": "npm version major && git push --follow-tags"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eventia-io/eventia-core.git"
+    },
+    "keywords": [
+        "ddd",
+        "cqrs",
+        "event sourcing",
+        "services",
+        "microservices",
+        "typescript"
+    ],
+    "author": "Arturo Arévalo González",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/arturoarevalo/eventia-core/issues"
+    },
+    "homepage": "https://github.com/arturoarevalo/eventia-core#readme",
+    "jest": {
+        "moduleFileExtensions": [
+            "ts",
+            "js"
+        ],
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
+        "globals": {
+            "ts-jest": {
+                "tsConfig": "tsconfig.json"
+            }
+        },
+        "testMatch": [
+            "test/**/*.+(spec|test).(ts|js)"
+        ],
+        "testEnvironment": "node",
+        "collectCoverageFrom": [
+            "source/**"
+        ],
+        "watchPathIgnorePatterns": [
+            "<rootDir>/node_modules/"
+        ],
+        "coverageThreshold": {
+            "global": {
+                "branches": 0,
+                "functions": 1,
+                "lines": 1,
+                "statements": 1
+            }
+        }
+    },
+    "devDependencies": {
+        "@types/jest": "^24.0.12",
+        "@types/node": "^11.13.8",
+        "@typescript-eslint/eslint-plugin": "^1.7.0",
+        "eslint": "^5.16.0",
+        "eslint-config-airbnb-base": "^13.1.0",
+        "eslint-plugin-import": "^2.17.2",
+        "nodemon": "^1.19.0",
+        "ts-jest": "^24.0.2",
+        "ts-node": "^8.1.0",
+        "typescript": "^3.4.5"
+    },
+    "dependencies": {
+        "reflect-metadata": "^0.1.13"
+    }
+}
