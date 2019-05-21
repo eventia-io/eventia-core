@@ -32,9 +32,9 @@
     "author": "Arturo Arévalo González",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/arturoarevalo/eventia-core/issues"
+        "url": "https://github.com/eventia-io/eventia-core/issues"
     },
-    "homepage": "https://github.com/arturoarevalo/eventia-core#readme",
+    "homepage": "https://github.com/eventia-io/eventia-core#readme",
     "jest": {
         "moduleFileExtensions": [
             "ts",
