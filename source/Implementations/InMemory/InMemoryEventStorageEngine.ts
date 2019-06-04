@@ -6,6 +6,8 @@ import { InMemoryEventStorageQuery } from "./InMemoryEventStorageQuery";
 import { DomainEventMessage } from "../../EventHandling/DomainEventMessage";
 import { PositionalTrackingToken, LowerBoundTrackingToken } from "../../EventHandling/PositionalTrackingToken";
 import { Logger } from "../../Infrastructure/Logger";
+import { Transaction } from "../../Infrastructure/Transaction";
+import { InMemoryTransaction } from "./InMemoryTransaction";
 
 
 export class InMemoryEventStorageEngine implements EventStorageEngine {
@@ -17,7 +19,14 @@ export class InMemoryEventStorageEngine implements EventStorageEngine {
         this.logger = logger;
     }
 
-    public readEvents(trackingToken: TrackingToken, block?: boolean): InfiniteStream<TrackedDomainEventMessage> {
+    public createTransaction(): Transaction {
+        return new InMemoryTransaction(this.logger, this.events);
+    }
+
+    public readEvents(
+        trackingToken: TrackingToken,
+        block?: boolean
+    ): InfiniteStream<TrackedDomainEventMessage> {
         if (block === true) {
             throw new Error("InMemoryEventStorageEngine does not support infinite streams");
         }
@@ -25,7 +34,10 @@ export class InMemoryEventStorageEngine implements EventStorageEngine {
         return new InMemoryEventStorageQuery(this.logger, this.events, trackingToken);
     }
 
-    public async appendEvents(eventOrEvents: DomainEventMessage | DomainEventMessage[]): Promise<void> {
+    public async appendEvents(
+        eventOrEvents: DomainEventMessage | DomainEventMessage[],
+        transaction?: Transaction
+    ): Promise<void> {
         const events: DomainEventMessage[] = Array.isArray(eventOrEvents) ? eventOrEvents : [eventOrEvents];
 
         for (const event of events) {
@@ -34,18 +46,37 @@ export class InMemoryEventStorageEngine implements EventStorageEngine {
             }
         }
 
-        for (const event of events) {
-            this.events.push(new TrackedDomainEventMessage({
-                identifier: event.identifier,
-                payloadType: event.payloadType,
-                payload: event.payload,
-                metadata: event.metadata,
-                aggregateIdentifier: event.aggregateIdentifier,
-                aggregateType: event.aggregateType,
-                timestamp: event.timestamp,
-                sequenceNumber: event.sequenceNumber,
-                trackingToken: new PositionalTrackingToken(this.events.length + 1)
-            }));
+        const innerTransaction = this.useOrCreateTransaction(transaction);
+
+        try {
+            await innerTransaction.begin();
+
+            for (const event of events) {
+                const storedEvent = new TrackedDomainEventMessage({
+                    identifier: event.identifier,
+                    payloadType: event.payloadType,
+                    payload: event.payload,
+                    metadata: event.metadata,
+                    aggregateIdentifier: event.aggregateIdentifier,
+                    aggregateType: event.aggregateType,
+                    timestamp: event.timestamp,
+                    sequenceNumber: event.sequenceNumber,
+                    trackingToken: new PositionalTrackingToken(this.events.length + 1)
+                });
+
+                this.events.push(storedEvent);
+                innerTransaction.append(storedEvent);
+            }
+
+            await innerTransaction.commit();
+        } catch (error) {
+            await innerTransaction.rollback();
+            throw error;
+        } finally {
+            // Release transaction only if we have created it.
+            if (transaction === undefined) {
+                await innerTransaction.release();
+            }
         }
     }
 
@@ -67,6 +98,14 @@ export class InMemoryEventStorageEngine implements EventStorageEngine {
 
     public dump(): void {
         this.logger.info(this.events);
+    }
+
+    protected useOrCreateTransaction(transaction?: Transaction): InMemoryTransaction {
+        if (transaction !== undefined && transaction instanceof InMemoryTransaction === false) {
+            throw new Error("Transaction must be an instance of InMemoryTransaction");
+        }
+
+        return (transaction || this.createTransaction()) as InMemoryTransaction;
     }
 
     protected checkDuplicate(newEvent: DomainEventMessage): boolean {

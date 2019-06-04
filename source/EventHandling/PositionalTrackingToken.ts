@@ -52,6 +52,10 @@ export class PositionalTrackingToken extends TrackingToken {
         throw new Error("Unsupported TrackingToken covering check operation");
     }
 
+    public needsCatchup(): boolean {
+        return true;
+    }
+
 }
 
 
@@ -142,6 +146,10 @@ export class BoundedTrackingToken implements TrackingToken {
         throw new Error("Unsupported TrackingToken covering check operation");
     }
 
+    public needsCatchup(): boolean {
+        return true;
+    }
+
     protected calculateBoundsFromArray(bounds: TrackingToken[]): { maximum: number; minimum: number } {
         let minimum = Infinity;
         let maximum = 0;
@@ -157,6 +165,10 @@ export class BoundedTrackingToken implements TrackingToken {
                 minimum = Math.min(minimum, bound.lowerBound.position);
                 maximum = Math.max(maximum, bound.upperBound.position);
             }
+        }
+
+        if (minimum >= maximum) {
+            maximum = Infinity;
         }
 
         return { maximum, minimum };

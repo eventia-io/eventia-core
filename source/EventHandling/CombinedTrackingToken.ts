@@ -14,12 +14,14 @@ export class CombinedTrackingToken extends TrackingToken {
     public constructor(tokens: TrackingToken[]) {
         super();
 
-        const positionalTokens = this.getPositionalTokens(tokens);
+        const flattenedTokens = Array.from(this.expandTokens(tokens));
+
+        const positionalTokens = this.getPositionalTokens(flattenedTokens);
         if (positionalTokens.length > 0) {
             this.addTrackingToken(new BoundedTrackingToken(positionalTokens));
         }
 
-        const payloadTypes = this.getPayloadFromTokens(this.getPayloadTrackingTokens(tokens));
+        const payloadTypes = this.getPayloadFromTokens(this.getPayloadTrackingTokens(flattenedTokens));
         if (payloadTypes.length > 0) {
             this.addTrackingToken(new PayloadTrackingToken(payloadTypes));
         }
@@ -37,6 +39,16 @@ export class CombinedTrackingToken extends TrackingToken {
         }
 
         return true;
+    }
+
+    public needsCatchup(): boolean {
+        for (const trackingToken of this.internalTrackingTokens) {
+            if (trackingToken.needsCatchup()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected addTrackingToken(trackingTokenOrTokens: TrackingToken | TrackingToken[]): void {
@@ -70,6 +82,16 @@ export class CombinedTrackingToken extends TrackingToken {
         }
 
         return payloadTypes;
+    }
+
+    protected * expandTokens(tokens: TrackingToken[]): Iterable<TrackingToken> {
+        for (const token of tokens) {
+            if (token instanceof CombinedTrackingToken) {
+                yield* this.expandTokens(token.internalTrackingTokens);
+            } else {
+                yield token;
+            }
+        }
     }
 
 }

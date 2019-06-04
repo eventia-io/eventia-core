@@ -23,4 +23,8 @@ export class AggregateIdentifierTrackingToken extends TrackingToken {
         throw new Error("Unsupported TrackingToken covering check operation");
     }
 
+    public needsCatchup(): boolean {
+        return false;
+    }
+
 }

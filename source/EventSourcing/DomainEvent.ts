@@ -1,4 +1,5 @@
 import { CodeMetadata } from "../Infrastructure/CodeMetadata";
+import { EventFactory } from "../Infrastructure/EventFactory";
 
 /**
  * Tags a class as a domain event.
@@ -10,4 +11,5 @@ export function DomainEvent<T>(
     constructor: new (...args: any[]) => T
 ): void {
     CodeMetadata.setProperty(constructor.name, "DomainEvent", true);
+    EventFactory.register(constructor.name, constructor);
 }

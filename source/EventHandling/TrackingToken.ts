@@ -10,5 +10,6 @@ import { EventMessage } from "./EventMessage";
 export abstract class TrackingToken {
 
     abstract covers(message: EventMessage): boolean;
+    abstract needsCatchup(): boolean;
 
 }

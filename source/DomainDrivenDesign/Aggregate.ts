@@ -8,7 +8,7 @@ export class Aggregate<T = any> {
 
     public constructor(model: T) {
         this.model = model;
-        this.version = -1;
+        this.version = 0;
     }
 
     public getIdentifier(): string {

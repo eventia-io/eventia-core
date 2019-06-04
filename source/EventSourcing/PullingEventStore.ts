@@ -159,7 +159,7 @@ export class PullingEventStore extends AbstractEventStore {
     ): EventMessageTrackingSubscribableStream[] {
         return streams
             .filter(
-                (stream): boolean => (stream.trackingToken instanceof AnyMessageTrackingToken) === false
+                (stream): boolean => stream.trackingToken.needsCatchup()
             );
     }
 

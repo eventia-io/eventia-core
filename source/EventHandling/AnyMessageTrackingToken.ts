@@ -12,4 +12,8 @@ export class AnyMessageTrackingToken extends TrackingToken {
         return true;
     }
 
+    public needsCatchup(): boolean {
+        return false;
+    }
+
 }

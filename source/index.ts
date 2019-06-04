@@ -32,6 +32,8 @@ export * from "./EventHandling/EventProcessor";
 export * from "./EventHandling/AbstractEventProcessor";
 export * from "./EventHandling/SubscribingEventProcessor";
 export * from "./EventHandling/TrackingEventProcessor";
+export * from "./EventHandling/HeadTrackingEventProcessor";
+export * from "./EventHandling/TailTrackingEventProcessor";
 export * from "./EventHandling/TrackingToken";
 export * from "./EventHandling/AnyMessageTrackingToken";
 export * from "./EventHandling/PositionalTrackingToken";
@@ -61,6 +63,7 @@ export * from "./Infrastructure/Logger";
 export * from "./Infrastructure/RepositoryFactory";
 export * from "./Infrastructure/SubscribableStream";
 export * from "./Infrastructure/UniqueIdentifierFactory";
+export * from "./Infrastructure/Transaction";
 
 export * from "./Implementations/InMemory/InMemoryTokenStore";
 export * from "./Implementations/InMemory/InMemoryEventStorageEngine";

@@ -34,4 +34,8 @@ export class PayloadTrackingToken extends TrackingToken {
         return this.internalPayloadTypes.has(eventMessage.payloadType);
     }
 
+    public needsCatchup(): boolean {
+        return false;
+    }
+
 }

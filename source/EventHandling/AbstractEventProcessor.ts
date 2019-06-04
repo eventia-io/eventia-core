@@ -5,6 +5,9 @@ import { EventMessage } from "./EventMessage";
 import { CodeMetadata } from "../Infrastructure/CodeMetadata";
 import { EventHandlerFunction } from "./EventHandler";
 import { InfiniteStream } from "../Infrastructure/InfiniteStream";
+import { EventFactory } from "../Infrastructure/EventFactory";
+import { TrackingToken } from "./TrackingToken";
+import { PayloadTrackingToken } from "./PayloadTrackingToken";
 
 
 export type PayloadHandlerFunction = (event: EventMessage) => Promise<void>;
@@ -13,6 +16,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
 
     protected readonly logger: Logger;
     protected readonly messageSource: StreamableMessageSource;
+    protected readonly name?: string;
 
     protected readonly payloadHandlers = new Map<string, PayloadHandlerFunction[]>();
 
@@ -21,9 +25,10 @@ export abstract class AbstractEventProcessor implements EventProcessor {
     protected readyPromise: Promise<void>;
     protected isClosing: boolean = false;
 
-    public constructor(logger: Logger, messageSource: StreamableMessageSource) {
+    public constructor(logger: Logger, messageSource: StreamableMessageSource, name?: string) {
         this.logger = logger;
         this.messageSource = messageSource;
+        this.name = name;
     }
 
     public register(instance: {}): void {
@@ -46,7 +51,11 @@ export abstract class AbstractEventProcessor implements EventProcessor {
             }
 
             const handler: PayloadHandlerFunction =
-                (event): Promise<void> => fn.call(instance, event.payload, event.metadata);
+                (event): Promise<void> => fn.call(
+                    instance,
+                    EventFactory.createInstance(event.payloadType, event.payload),
+                    event.metadata
+                );
 
             const payloadHandlers = this.payloadHandlers.get(eventClassName) || [];
             payloadHandlers.push(handler);
@@ -55,7 +64,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
     }
 
     public getName(): string {
-        return this.constructor.name;
+        return this.name || this.constructor.name;
     }
 
     public async start(): Promise<void> {
@@ -126,6 +135,12 @@ export abstract class AbstractEventProcessor implements EventProcessor {
         const handlers = this.payloadHandlers.get(payloadType);
 
         return handlers || [];
+    }
+
+    protected getPayloadTypeTrackingToken(): TrackingToken {
+        const payloadTypes = Array.from(this.payloadHandlers.keys());
+
+        return new PayloadTrackingToken(payloadTypes);
     }
 
     protected abstract openStream(): Promise<InfiniteStream<EventMessage>>;

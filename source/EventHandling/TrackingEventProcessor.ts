@@ -5,6 +5,8 @@ import { TokenStore } from "./TokenStore";
 import { Logger } from "../Infrastructure/Logger";
 import { StreamableMessageSource } from "../Messaging/StreamableMessageSource";
 import { TrackedDomainEventMessage } from "./TrackedDomainEventMessage";
+import { TrackingToken } from "./TrackingToken";
+import { CombinedTrackingToken } from "./CombinedTrackingToken";
 
 
 export class TrackingEventProcessor extends AbstractEventProcessor {
@@ -14,18 +16,25 @@ export class TrackingEventProcessor extends AbstractEventProcessor {
     public constructor(
         logger: Logger,
         messageSource: StreamableMessageSource,
-        tokenStore: TokenStore
+        tokenStore: TokenStore,
+        name?: string
     ) {
-        super(logger, messageSource);
+        super(logger, messageSource, name);
 
         this.tokenStore = tokenStore;
     }
 
     protected async openStream(): Promise<InfiniteStream<EventMessage>> {
-        return this.messageSource.openStream(
+        const initialPositionTrackingToken =
             await this.tokenStore.retrieveToken(this.getName()) ||
-            await this.messageSource.createTailToken()
-        );
+            await this.getDefaultTrackingToken();
+
+        const trackingToken = new CombinedTrackingToken([
+            this.getPayloadTypeTrackingToken(),
+            initialPositionTrackingToken
+        ]);
+
+        return this.messageSource.openStream(trackingToken);
     }
 
     protected async invoke(payloadHandlers: PayloadHandlerFunction[], event: EventMessage): Promise<void> {
@@ -37,6 +46,10 @@ export class TrackingEventProcessor extends AbstractEventProcessor {
                 event.trackingToken
             );
         }
+    }
+
+    protected getDefaultTrackingToken(): Promise<TrackingToken> {
+        return this.messageSource.createTailToken();
     }
 
 }

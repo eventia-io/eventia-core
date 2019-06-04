@@ -6,7 +6,7 @@ import { InfiniteStream } from "../Infrastructure/InfiniteStream";
 export class SubscribingEventProcessor extends AbstractEventProcessor {
 
     protected async openStream(): Promise<InfiniteStream<EventMessage>> {
-        return this.messageSource.openStream();
+        return this.messageSource.openStream(this.getPayloadTypeTrackingToken());
     }
 
 }
