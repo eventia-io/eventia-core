@@ -1,4 +1,4 @@
-import { EventEmitter } from "stream";
+import { EventEmitter } from "events";
 
 import { InfiniteStream } from "../../Infrastructure/InfiniteStream";
 import { TrackedDomainEventMessage } from "../../EventHandling/TrackedDomainEventMessage";
