@@ -66,5 +66,5 @@ export * from "./Infrastructure/UniqueIdentifierFactory";
 export * from "./Infrastructure/Transaction";
 
 export * from "./Implementations/InMemory/InMemoryTokenStore";
-export * from "./Implementations/InMemory/InMemoryEventStorageEngine";
 export * from "./Implementations/InMemory/InMemoryEventStorageQuery";
+export * from "./Implementations/InMemory/InMemoryEventStorageEngine";

@@ -22,7 +22,7 @@ export abstract class AbstractRepository<T> implements Repository<T> {
         return new constructor(...args);
     }
 
-    public abstract load(aggregateIdentifier: string): Promise<T>;
+    public abstract load(aggregateIdentifier: string): Promise<T | undefined>;
     public abstract save(aggregateInstance: T): Promise<void>;
 
 }

@@ -14,7 +14,7 @@ export class EventSourcedRepository<T> extends AbstractRepository<T> {
         this.eventStore = eventStore;
     }
 
-    public async load(aggregateIdentifier: string): Promise<T> {
+    public async load(aggregateIdentifier: string): Promise<T | undefined> {
         // Read all domain events in the event store
         const eventMessages = await this.eventStore.readEvents(aggregateIdentifier);
 
@@ -28,8 +28,8 @@ export class EventSourcedRepository<T> extends AbstractRepository<T> {
         }
 
         // If no events have been processed, the aggregate doesn't exist
-        if (aggregateRoot.getVersion() === -1) {
-            throw new Error("Aggregate not found");
+        if (aggregateRoot.getVersion() === 0) {
+            return undefined;
         }
 
         return state;
