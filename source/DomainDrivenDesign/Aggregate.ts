@@ -1,7 +1,7 @@
 import { CodeMetadata } from "../Infrastructure/CodeMetadata";
 
 
-export class Aggregate<T = any> {
+export class Aggregate<T extends Record<string, any> = any> {
 
     protected model: T;
     protected version: number;

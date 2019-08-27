@@ -63,14 +63,14 @@ export class CombinedTrackingToken extends TrackingToken {
 
     protected getPositionalTokens(tokens: TrackingToken[]): TrackingToken[] {
         return tokens.filter(
-            token => token instanceof PositionalTrackingToken ||
+            (token) => token instanceof PositionalTrackingToken ||
                 token instanceof BoundedTrackingToken
         );
     }
 
     protected getPayloadTrackingTokens(tokens: TrackingToken[]): TrackingToken[] {
         return tokens.filter(
-            token => token instanceof PayloadTrackingToken
+            (token) => token instanceof PayloadTrackingToken
         );
     }
 

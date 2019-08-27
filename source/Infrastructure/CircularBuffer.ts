@@ -5,8 +5,8 @@
 export class CircularBuffer<T> {
 
     protected buffer: T[];
-    protected head: number = 0;
-    protected tail: number = 0;
+    protected head = 0;
+    protected tail = 0;
 
     public constructor(capacity: number) {
         this.buffer = new Array<T>(capacity);

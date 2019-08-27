@@ -14,7 +14,7 @@ export class CommandMessage<T = any> extends Message<T> {
         super(values);
     }
 
-    public static fromInstance<K>(payload: K, metadata?: any): CommandMessage<K> {
+    public static fromInstance<K extends Record<string, any>>(payload: K, metadata?: any): CommandMessage<K> {
         return new CommandMessage<any>({
             identifier: UniqueIdentifierFactory.create(),
             payloadType: payload.constructor.name,

@@ -8,8 +8,8 @@ export class InMemoryTransaction implements Transaction {
     protected logger: Logger;
     protected storage: TrackedDomainEventMessage[];
     protected events: TrackedDomainEventMessage[] = [];
-    protected beginCount: number = 0;
-    protected rolledBack: boolean = false;
+    protected beginCount = 0;
+    protected rolledBack = false;
 
     public constructor(logger: Logger, storage: TrackedDomainEventMessage[]) {
         this.logger = logger;

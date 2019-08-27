@@ -10,15 +10,17 @@ import { AggregateIdentifierTrackingToken } from "../EventHandling/AggregateIden
 import { PublishResult } from "../EventHandling/EventBus";
 import { TrackingToken } from "../EventHandling/TrackingToken";
 import { InfiniteStream } from "../Infrastructure/InfiniteStream";
+import { EventMessageTrackingSubscribableStream } from "..";
 
 
 export abstract class AbstractEventStore implements EventStore {
 
     protected readonly logger: Logger;
     protected readonly eventStorageEngine: EventStorageEngine;
+    protected readonly publishInterceptors: MessageInterceptor<EventMessage>[] = [];
     protected readonly dispatchInterceptors: MessageInterceptor<EventMessage>[] = [];
-    protected readonly dispatchQueue: EventMessage[] = [];
 
+    protected streams = new Set<EventMessageTrackingSubscribableStream>();
     protected lastTrackedToken: PositionalTrackingToken;
 
     public constructor(logger: Logger, eventStorageEngine: EventStorageEngine) {
@@ -28,6 +30,10 @@ export abstract class AbstractEventStore implements EventStore {
 
     public registerDispatchInterceptor(interceptor: MessageInterceptor<EventMessage>): void {
         this.dispatchInterceptors.push(interceptor);
+    }
+
+    public registerPublishInterceptor(interceptor: MessageInterceptor<EventMessage>): void {
+        this.publishInterceptors.push(interceptor);
     }
 
     public async * readEvents(
@@ -48,10 +54,16 @@ export abstract class AbstractEventStore implements EventStore {
         const events = Array.isArray(eventOrEvents) ? eventOrEvents : [eventOrEvents];
 
         const domainEvents: DomainEventMessage[] = [];
+        const dispatchableEvents: EventMessage[] = [];
 
         for (const event of events) {
-            if (event instanceof DomainEventMessage) {
-                domainEvents.push(event);
+            const interceptedEvent = await this.applyPublishInterceptors(event);
+            if (interceptedEvent !== undefined) {
+                if (event instanceof DomainEventMessage) {
+                    domainEvents.push(event);
+                } else {
+                    dispatchableEvents.push(event);
+                }
             }
         }
 
@@ -59,9 +71,12 @@ export abstract class AbstractEventStore implements EventStore {
             await this.eventStorageEngine.appendEvents(domainEvents);
         }
 
+        if (dispatchableEvents.length > 0) {
+            await this.dispatch(dispatchableEvents);
+        }
 
         return {
-            eventsPublished: domainEvents.length
+            eventsPublished: domainEvents.length + dispatchableEvents.length
         };
     }
 
@@ -90,16 +105,33 @@ export abstract class AbstractEventStore implements EventStore {
         for (const event of events) {
             const interceptedEvent = await this.applyDispatchInterceptors(event);
 
-            if (interceptedEvent !== undefined && event instanceof DomainEventMessage === false) {
-                this.dispatchQueue.push(interceptedEvent);
+            if (interceptedEvent !== undefined) {
+                const promises: Promise<void>[] = [];
+
+                for (const stream of this.streams) {
+                    promises.push(stream.publish(interceptedEvent));
+                }
+
+                await Promise.all(promises);
             }
         }
     }
 
     protected async applyDispatchInterceptors(event: EventMessage): Promise<EventMessage | undefined> {
+        return this.applyInterceptors(event, this.dispatchInterceptors);
+    }
+
+    protected async applyPublishInterceptors(event: EventMessage): Promise<EventMessage | undefined> {
+        return this.applyInterceptors(event, this.publishInterceptors);
+    }
+
+    protected async applyInterceptors(
+        event: EventMessage,
+        interceptors: MessageInterceptor<EventMessage>[]
+    ): Promise<EventMessage | undefined> {
         let currentEvent = event;
 
-        for (const interceptor of this.dispatchInterceptors) {
+        for (const interceptor of interceptors) {
             currentEvent = await interceptor.handle(currentEvent);
             if (currentEvent === undefined) {
                 break;

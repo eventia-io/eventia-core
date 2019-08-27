@@ -1,7 +1,8 @@
 import { CodeMetadata } from "../Infrastructure/CodeMetadata";
+import { EventFactory } from "../Infrastructure/EventFactory";
 
 
-export type EventHandlerFunction = (event: any, metadata?: any) => Promise<void>;
+export type EventHandlerFunction = (event: any, metadata?: any, message?: any) => Promise<void>;
 
 export function EventHandler<T>(
     classConstructor: {},
@@ -31,6 +32,8 @@ export function EventHandler<T>(
     // First parameters is an event
     const eventClassConstructor = targetParameters[0];
     const eventClassName = eventClassConstructor.name;
+    EventFactory.register(eventClassName, eventClassConstructor);
+
     // TODO: register eventclassconstructor in a factory
 
     // Add to list of handled events

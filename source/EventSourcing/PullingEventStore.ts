@@ -25,12 +25,10 @@ export class PullingEventStore extends AbstractEventStore {
     protected readonly pullTimeout: number;
     protected readonly streamCapacity: number;
 
-    protected streams = new Set<EventMessageTrackingSubscribableStream>();
-
     protected newStreams: EventMessageTrackingSubscribableStream[] = [];
     protected closedStreams: EventMessageTrackingSubscribableStream[] = [];
 
-    protected pullingLoopActive: boolean = false;
+    protected pullingLoopActive = false;
 
     public constructor(logger: Logger, storageEngine: EventStorageEngine, options?: PullingEventStoreOptions) {
         super(logger, storageEngine);
@@ -71,16 +69,6 @@ export class PullingEventStore extends AbstractEventStore {
         );
     }
 
-    protected async dispatchEventToAllStreams(event: EventMessage): Promise<void[]> {
-        const promises: Promise<void>[] = [];
-
-        for (const stream of this.streams) {
-            promises.push(stream.publish(event));
-        }
-
-        return Promise.all(promises);
-    }
-
     protected async pullingLoop(): Promise<void> {
         const lowerBound = await this.createTailToken();
         const upperBound = new UpperBoundTrackingToken(lowerBound);
@@ -97,18 +85,9 @@ export class PullingEventStore extends AbstractEventStore {
         );
 
         for await (const event of events) {
-            await this.dispatchEventToAllStreams(event);
+            await this.dispatch([event]);
 
             this.lastTrackedToken = event.trackingToken as PositionalTrackingToken;
-        }
-
-        if (this.dispatchQueue.length > 0) {
-            const dispatchableEvent = this.dispatchQueue;
-            this.dispatchQueue.length = 0;
-
-            for (const event of dispatchableEvent) {
-                await this.dispatchEventToAllStreams(event);
-            }
         }
 
         if (this.closedStreams.length > 0) {
@@ -130,13 +109,13 @@ export class PullingEventStore extends AbstractEventStore {
         if (catchupStreams.length > 0) {
             // Create a single tracking token that matches all events required by the catchup streams
             const combinedTrackingToken = new CombinedTrackingToken([
-                ...catchupStreams.map(stream => stream.trackingToken),
+                ...catchupStreams.map((stream) => stream.trackingToken),
                 upperBound
             ]);
 
             // Feed initial events to the streams
             for await (const event of this.eventStorageEngine.readEvents(combinedTrackingToken)) {
-                const promises = catchupStreams.map(stream => stream.publish(event));
+                const promises = catchupStreams.map((stream) => stream.publish(event));
                 await Promise.all(promises);
             }
         }

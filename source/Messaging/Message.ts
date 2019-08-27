@@ -19,8 +19,12 @@ export class Message<T = any> {
         return clonedMessage;
     }
 
-    public cloneAndMergeMetadata(metadata: any): Message {
-        const cloned = Object.assign({}, this, { metadata: Object.assign(this.metadata, metadata) });
+    public cloneAndMergeMetadata(metadata: any): this {
+        const clonedMetadata = (this.metadata === undefined)
+            ? metadata
+            : Object.assign(this.metadata, metadata);
+
+        const cloned = Object.assign({}, this, { metadata: clonedMetadata });
 
         const clonedMessage = new (this.constructor as any)(cloned);
         return clonedMessage;

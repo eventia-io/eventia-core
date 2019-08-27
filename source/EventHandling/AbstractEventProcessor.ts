@@ -23,7 +23,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
     protected stream: InfiniteStream<EventMessage>;
     protected stopPromise: Promise<void>;
     protected readyPromise: Promise<void>;
-    protected isClosing: boolean = false;
+    protected isClosing = false;
 
     public constructor(logger: Logger, messageSource: StreamableMessageSource, name?: string) {
         this.logger = logger;
@@ -54,7 +54,8 @@ export abstract class AbstractEventProcessor implements EventProcessor {
                 (event): Promise<void> => fn.call(
                     instance,
                     EventFactory.createInstance(event.payloadType, event.payload),
-                    event.metadata
+                    event.metadata,
+                    event
                 );
 
             const payloadHandlers = this.payloadHandlers.get(eventClassName) || [];
@@ -127,7 +128,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
 
     protected async invoke(payloadHandlers: PayloadHandlerFunction[], event: EventMessage): Promise<void> {
         await Promise.all(
-            payloadHandlers.map(handler => handler(event))
+            payloadHandlers.map((handler) => handler(event))
         );
     }
 

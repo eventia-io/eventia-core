@@ -16,7 +16,7 @@ export class SubscribableStream<T> extends EventEmitter implements InfiniteStrea
     protected resolveConsumer: ConsumerResolveCallback<T> | undefined;
     protected resolvePublish: PublisherResolveCallback | undefined;
 
-    protected isClosed: boolean = false;
+    protected isClosed = false;
 
     public constructor(logger: Logger, capacity: number) {
         super();
