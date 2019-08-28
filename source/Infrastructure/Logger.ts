@@ -9,4 +9,6 @@ export interface Logger {
     info: LogFunction;
     debug: LogFunction;
     trace: LogFunction;
+
+    level: string;
 }
