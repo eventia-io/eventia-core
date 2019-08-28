@@ -24,6 +24,7 @@ export * from "./DomainDrivenDesign/AggregateIdentifier";
 export * from "./DomainDrivenDesign/AggregateLifecycle";
 export * from "./DomainDrivenDesign/Repository";
 
+export * from "./EventHandling/EventMessage";
 export * from "./EventHandling/DomainEventMessage";
 export * from "./EventHandling/TrackedDomainEventMessage";
 export * from "./EventHandling/EventHandler";
