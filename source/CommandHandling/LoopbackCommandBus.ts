@@ -2,6 +2,7 @@ import { CommandMessage } from "./CommandMessage";
 import { CommandMessageHandler } from "./CommandBus";
 import { AbstractCommandBus } from "./AbstractCommandBus";
 import { Logger } from "../Infrastructure/Logger";
+import { Command } from "./Command";
 
 
 export class LoopbackCommandBus extends AbstractCommandBus {
@@ -17,7 +18,9 @@ export class LoopbackCommandBus extends AbstractCommandBus {
         this.handlerMap.set(commandName, handler);
     }
 
-    public async dispatch(command: CommandMessage | any, metadata?: any): Promise<void> {
+    public async dispatch<T extends Command<any, any>>(query: T, metadata?: any): Promise<T["__COMMAND_RETURN_TYPE"]>;
+    public async dispatch(command: any, metadata?: any): Promise<any>;
+    public async dispatch(command: CommandMessage | any, metadata?: any): Promise<any> {
         const commandMessage = command instanceof CommandMessage
             ? command
             : CommandMessage.fromInstance(command, metadata);

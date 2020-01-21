@@ -1,7 +1,7 @@
 import { CodeMetadata } from "../Infrastructure/CodeMetadata";
 
 
-export type CommandHandlerFunction = (command: any, metadata?: any) => Promise<void>;
+export type CommandHandlerFunction = (command: any, metadata?: any) => Promise<any>;
 
 function isAggregate(className: string): boolean {
     return CodeMetadata.getProperty(className, "Aggregate", false);

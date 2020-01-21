@@ -4,6 +4,7 @@ import { CommandHandlerFunction } from "./CommandHandler";
 import { CommandMessage } from "./CommandMessage";
 import { Logger } from "../Infrastructure/Logger";
 import { RepositoryFactory } from "../Infrastructure/RepositoryFactory";
+import { Command } from "./Command";
 
 
 export abstract class AbstractCommandBus implements CommandBus {
@@ -23,7 +24,7 @@ export abstract class AbstractCommandBus implements CommandBus {
             if (handler !== undefined) {
                 this.subscribe(
                     commandName,
-                    (commandMessage): Promise<void> => handler.call(
+                    (commandMessage): Promise<any> => handler.call(
                         instance,
                         commandMessage.payload,
                         commandMessage.metadata
@@ -71,7 +72,13 @@ export abstract class AbstractCommandBus implements CommandBus {
     }
 
     public abstract subscribe(commandName: string, handler: CommandMessageHandler): void;
-    public abstract dispatch(commandMessage: CommandMessage): Promise<void>;
-    public abstract dispatch(command: any, metadata?: any): Promise<void>;
+
+    public abstract dispatch<T extends Command<any, any>>(
+        query: T,
+        metadata?: any
+    ): Promise<T["__COMMAND_RETURN_TYPE"]>;
+
+    public abstract dispatch(command: any, metadata?: any): Promise<any>;
+    public abstract dispatch(command: CommandMessage | any, metadata?: any): Promise<any>;
 
 }

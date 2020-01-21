@@ -5,6 +5,7 @@ export * from "./Messaging/Message";
 export * from "./Messaging/MessageInterceptor";
 export * from "./Messaging/StreamableMessageSource";
 
+export * from "./CommandHandling/Command";
 export * from "./CommandHandling/CommandMessage";
 export * from "./CommandHandling/CommandHandler";
 export * from "./CommandHandling/CommandBus";
