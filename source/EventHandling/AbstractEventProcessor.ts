@@ -11,6 +11,7 @@ import { PayloadTrackingToken } from "./PayloadTrackingToken";
 
 
 export type PayloadHandlerFunction = (event: EventMessage) => Promise<void>;
+export type ErrorHandlerFunction = (error: Error, event: EventMessage) => Promise<void>;
 
 export abstract class AbstractEventProcessor implements EventProcessor {
 
@@ -19,6 +20,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
     protected readonly name?: string;
 
     protected readonly payloadHandlers = new Map<string, PayloadHandlerFunction[]>();
+    protected readonly errorHandlers: ErrorHandlerFunction[] = [];
 
     protected stream: InfiniteStream<EventMessage>;
     protected stopPromise: Promise<void>;
@@ -97,6 +99,20 @@ export abstract class AbstractEventProcessor implements EventProcessor {
         return this.stopPromise || Promise.resolve();
     }
 
+    public registerErrorHandler(handler: ErrorHandlerFunction): void {
+        this.errorHandlers.push(handler);
+    }
+
+    protected async handleError(error: any, event: any): Promise<void> {
+        if (this.errorHandlers.length === 0) {
+            throw error;
+        }
+
+        for (const errorHandler of this.errorHandlers) {
+            await errorHandler(error, event);
+        }
+    }
+
     protected async processEvents(): Promise<void> {
         const processorName = this.getName();
 
@@ -121,7 +137,11 @@ export abstract class AbstractEventProcessor implements EventProcessor {
                     );
                 }
 
-                await this.invoke(payloadHandlers, event);
+                try {
+                    await this.invoke(payloadHandlers, event);
+                } catch (error) {
+                    await this.handleError(error, event);
+                }
             }
         }
     }
