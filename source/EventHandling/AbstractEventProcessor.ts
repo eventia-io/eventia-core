@@ -103,7 +103,7 @@ export abstract class AbstractEventProcessor implements EventProcessor {
         this.errorHandlers.push(handler);
     }
 
-    protected async handleError(error: any, event: any): Promise<void> {
+    protected async handleError(error: Error, event: EventMessage): Promise<void> {
         if (this.errorHandlers.length === 0) {
             throw error;
         }
@@ -147,9 +147,9 @@ export abstract class AbstractEventProcessor implements EventProcessor {
     }
 
     protected async invoke(payloadHandlers: PayloadHandlerFunction[], event: EventMessage): Promise<void> {
-        await Promise.all(
-            payloadHandlers.map((handler) => handler(event))
-        );
+        for (const handler of payloadHandlers) {
+            await handler(event);
+        }
     }
 
     protected getRegisteredPayloadHandlers(payloadType: string): PayloadHandlerFunction[] {
