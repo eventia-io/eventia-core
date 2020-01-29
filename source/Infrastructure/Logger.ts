@@ -11,4 +11,6 @@ export interface Logger {
     trace: LogFunction;
 
     level: string;
+
+    child(context: any): Logger;
 }
